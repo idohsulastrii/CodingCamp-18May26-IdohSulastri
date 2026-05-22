@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Idoh</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1 id="clock">00:00:00</h1>
+        <h2 id="greeting">Loading...</h2>
+        
+        <div class="timer-card">
+            <div id="timer-display">25:00</div>
+            <button id="start-btn">Start</button>
+            <button id="stop-btn">Stop</button>
+            <button id="reset-btn">Reset</button>
+        </div>
+
+        <div class="todo-card">
+            <input type="text" id="todo-input" placeholder="Tulis tugas hari ini...">
+            <button id="add-btn">Tambah</button>
+            <ul id="todo-list"></ul>
+        </div>
+    </div>
+    <script src="js/app.js"></script>
+</body>
+</html>

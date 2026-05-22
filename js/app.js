@@ -1,104 +1,100 @@
-function updateDashboard() {
+// --- JAM, GREETING, & NAME ---
+function updateClock() {
     const now = new Date();
-    const hours = now.getHours();
-    
-    // Update Jam
-    document.getElementById('clock').innerText = now.toLocaleTimeString();
-
-    // Update Greeting
-    let greet = "";
-    if (hours < 12) greet = "Selamat Pagi, Idoh!";
-    else if (hours < 18) greet = "Selamat Siang, Idoh!";
-    else greet = "Selamat Malam, Idoh!";
-    
-    document.getElementById('greeting').innerText = greet;
+    document.getElementById('clock').innerText = now.toLocaleTimeString('id-ID');
 }
+setInterval(updateClock, 1000);
 
-// Jalankan setiap detik
-setInterval(updateDashboard, 1000);
-updateDashboard();
-// ==============================
-// FITUR POMODORO TIMER
-// ==============================
-let timeLeft = 25 * 60; // 25 menit
-let timerInterval = null;
+const nameInput = document.getElementById('name-input');
+const saveNameBtn = document.getElementById('save-name-btn');
+const greeting = document.getElementById('greeting');
 
-const timerDisplay = document.getElementById('timer-display');
-const startBtn = document.getElementById('start-btn');
-const stopBtn = document.getElementById('stop-btn');
-const resetBtn = document.getElementById('reset-btn');
+saveNameBtn.onclick = () => {
+    localStorage.setItem('userName', nameInput.value);
+    greeting.innerText = `Halo, ${nameInput.value}!`;
+};
+if(localStorage.getItem('userName')) greeting.innerText = `Halo, ${localStorage.getItem('userName')}!`;
 
-function updateTimer() {
-    const minutes = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-    const seconds = (timeLeft % 60).toString().padStart(2, '0');
-    timerDisplay.innerText = `${minutes}:${seconds}`;
-}
+// --- DARK MODE ---
+const themeToggle = document.getElementById('theme-toggle');
+themeToggle.onclick = () => {
+    document.body.classList.toggle('dark');
+    themeToggle.innerText = document.body.classList.contains('dark') ? '☀️ Light' : '🌙 Dark';
+};
 
-startBtn.addEventListener('click', () => {
-    if (timerInterval !== null) return; // Biar ga dobel klik
-    timerInterval = setInterval(() => {
-        if (timeLeft > 0) {
-            timeLeft--;
-            updateTimer();
-        } else {
-            clearInterval(timerInterval);
-            timerInterval = null;
-            alert("Waktu fokus selesai! Istirahat dulu yuk.");
-        }
-    }, 1000);
-});
+// --- POMODORO TIMER (Dengan Custom Durasi) ---
+let timeLeft = 25 * 60, timerId = null;
+const display = document.getElementById('timer-display');
+const timerInput = document.getElementById('timer-input');
 
-stopBtn.addEventListener('click', () => {
-    clearInterval(timerInterval);
-    timerInterval = null;
-});
+const renderTimer = () => {
+    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
+    const s = (timeLeft % 60).toString().padStart(2, '0');
+    display.innerText = `${m}:${s}`;
+};
 
-resetBtn.addEventListener('click', () => {
-    clearInterval(timerInterval);
-    timerInterval = null;
-    timeLeft = 25 * 60;
-    updateTimer();
-});
+document.getElementById('set-timer-btn').onclick = () => {
+    const newMinutes = parseInt(timerInput.value);
+    if (newMinutes > 0) {
+        timeLeft = newMinutes * 60;
+        renderTimer();
+    }
+};
 
-// ==============================
-// FITUR TO-DO LIST (LOCAL STORAGE)
-// ==============================
-const todoInput = document.getElementById('todo-input');
-const addBtn = document.getElementById('add-btn');
-const todoList = document.getElementById('todo-list');
+document.getElementById('start-btn').onclick = () => {
+    if (!timerId) timerId = setInterval(() => { timeLeft--; renderTimer(); if(timeLeft <= 0) clearInterval(timerId); }, 1000);
+};
+document.getElementById('stop-btn').onclick = () => { clearInterval(timerId); timerId = null; };
+document.getElementById('reset-btn').onclick = () => { clearInterval(timerId); timerId = null; timeLeft = (parseInt(timerInput.value) || 25) * 60; renderTimer(); };
 
-// Ambil data dari Local Storage pas web dibuka
-let tasks = JSON.parse(localStorage.getItem('myTasks')) || [];
+// --- TO-DO LIST (Anti-Duplikat) ---
+const input = document.getElementById('todo-input');
+const list = document.getElementById('todo-list');
+let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
 
-function renderTasks() {
-    todoList.innerHTML = '';
-    tasks.forEach((task, index) => {
+function saveAndRender() {
+    localStorage.setItem('tasks', JSON.stringify(tasks));
+    list.innerHTML = "";
+    tasks.forEach((t, i) => {
         const li = document.createElement('li');
-        li.innerHTML = `
-            ${task} 
-            <button onclick="deleteTask(${index})" style="margin-left: 10px; color: red;">X</button>
-        `;
-        todoList.appendChild(li);
+        li.innerHTML = `${t} <button onclick="deleteTask(${i})">❌</button>`;
+        list.appendChild(li);
     });
 }
 
-// Tambah tugas baru
-addBtn.addEventListener('click', () => {
-    const newTask = todoInput.value.trim();
-    if (newTask !== '') {
+document.getElementById('add-btn').onclick = () => {
+    const newTask = input.value.trim();
+    if (newTask && !tasks.includes(newTask)) {
         tasks.push(newTask);
-        localStorage.setItem('myTasks', JSON.stringify(tasks)); // Simpan ke Local Storage
-        todoInput.value = '';
-        renderTasks();
-    }
-});
+        input.value = "";
+        saveAndRender();
+    } else if (tasks.includes(newTask)) alert("Tugas sudah ada!");
+};
 
-// Hapus tugas
-window.deleteTask = function(index) {
-    tasks.splice(index, 1);
-    localStorage.setItem('myTasks', JSON.stringify(tasks)); // Update Local Storage
-    renderTasks();
+window.deleteTask = (i) => { tasks.splice(i, 1); saveAndRender(); };
+
+// --- QUICK LINKS ---
+const lName = document.getElementById('link-name'), lUrl = document.getElementById('link-url');
+let links = JSON.parse(localStorage.getItem('quickLinks')) || [];
+
+function renderLinks() {
+    localStorage.setItem('quickLinks', JSON.stringify(links));
+    const container = document.getElementById('links-container');
+    container.innerHTML = "";
+    links.forEach((link, i) => {
+        container.innerHTML += `<a href="${link.url}" target="_blank" class="link-item">${link.name}</a>
+                                <button onclick="deleteLink(${i})" style="padding:0; background:none;">❌</button>`;
+    });
 }
 
-// Tampilkan list saat pertama kali load
-renderTasks();
+document.getElementById('add-link-btn').onclick = () => {
+    if (lName.value && lUrl.value) {
+        links.push({ name: lName.value, url: lUrl.value.startsWith('http') ? lUrl.value : 'https://'+lUrl.value });
+        lName.value = ""; lUrl.value = ""; renderLinks();
+    }
+};
+
+window.deleteLink = (i) => { links.splice(i, 1); renderLinks(); };
+
+// --- INIT ---
+updateClock(); renderTimer(); saveAndRender(); renderLinks();

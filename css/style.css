@@ -1,0 +1,138 @@
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600&display=swap');
+
+:root {
+    --bg-light: #ffffff;
+    --text-light: #1f2937;
+    --bg-dark: #0f172a;
+    --text-dark: #f8fafc;
+    --accent: #6366f1; /* Indigo Modern */
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background: var(--bg-light);
+    color: var(--text-light);
+    transition: all 0.4s ease;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0;
+    padding-top: 60px;
+}
+
+body.dark {
+    background: var(--bg-dark);
+    color: var(--text-dark);
+}
+
+/* Tombol Dark Mode - Tetap di depan */
+#theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    background: var(--accent);
+    color: white;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+}
+
+/* Container Glassmorphism */
+.container {
+    max-width: 450px;
+    width: 90%;
+    padding: 30px;
+    border-radius: 30px;
+    background: rgba(255, 255, 255, 0.1);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255,255,255,0.2);
+    text-align: center;
+}
+
+#clock {
+    font-size: 3.5rem;
+    font-weight: 600;
+    margin-bottom: 5px;
+    background: linear-gradient(to right, var(--accent), #a855f7);
+    -webkit-background-clip: text;
+    background-clip: text; /* Tambahkan baris ini */
+    -webkit-text-fill-color: transparent;
+}
+
+
+.timer-card, .todo-card, .links-card {
+    background: rgba(100, 116, 139, 0.1);
+    padding: 15px;
+    border-radius: 20px;
+    margin-top: 15px;
+}
+#todo-list {
+    column-count: 2;        /* Membagi jadi 2 kolom */
+    column-gap: 15px;       /* Jarak antar kolom */
+    margin-top: 15px;
+    padding: 0;
+    list-style: none;
+    text-align: left;       /* Paksa tulisan rata kiri */
+}
+
+#todo-list li {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    margin-bottom: 10px;    /* Jarak antar tugas */
+    border-radius: 10px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.9rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    break-inside: avoid;    /* Mencegah item terpotong di tengah kolom */
+}
+
+/* Biar tetap rapi di HP */
+@media (max-width: 600px) {
+    #todo-list {
+        column-count: 1;
+    }
+}
+
+button {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.3s;
+}
+
+button:hover {
+    box-shadow: 0 0 15px var(--accent);
+    transform: scale(1.05);
+}
+
+input {
+    width: 100%;
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid #ddd;
+    margin-bottom: 10px;
+    background: rgba(255,255,255,0.05);
+}
+
+.link-item {
+    display: inline-block;
+    padding: 5px 12px;
+    background: rgba(99, 102, 241, 0.1);
+    color: var(--accent);
+    border-radius: 10px;
+    margin: 3px;
+    text-decoration: none;
+    font-size: 0.8rem;
+}

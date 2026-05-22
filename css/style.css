@@ -1,138 +1,341 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap');
 
+/* ── Design Tokens ─────────────────────────────────────────────────────────── */
 :root {
-    --bg-light: #ffffff;
-    --text-light: #1f2937;
-    --bg-dark: #0f172a;
-    --text-dark: #f8fafc;
-    --accent: #6366f1; /* Indigo Modern */
-}
-
-body {
-    font-family: 'Plus Jakarta Sans', sans-serif;
-    background: var(--bg-light);
-    color: var(--text-light);
-    transition: all 0.4s ease;
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-    padding-top: 60px;
+  --glass-bg:     rgba(255, 255, 255, 0.18);
+  --glass-border: rgba(255, 255, 255, 0.3);
+  --glass-blur:   blur(20px);
+  --text:         #1e1b4b;
+  --muted:        rgba(30, 27, 75, 0.5);
+  --accent:       #6366f1;
+  --accent-2:     #a855f7;
+  --accent-glow:  rgba(99, 102, 241, 0.4);
+  --done-text:    rgba(30, 27, 75, 0.28);
+  --input-bg:     rgba(255, 255, 255, 0.28);
+  --input-border: rgba(255, 255, 255, 0.45);
+  --radius:       20px;
+  --t:            0.3s ease;
 }
 
 body.dark {
-    background: var(--bg-dark);
-    color: var(--text-dark);
+  --glass-bg:     rgba(15, 23, 42, 0.5);
+  --glass-border: rgba(255, 255, 255, 0.09);
+  --text:         #f1f5f9;
+  --muted:        rgba(241, 245, 249, 0.48);
+  --done-text:    rgba(241, 245, 249, 0.2);
+  --input-bg:     rgba(255, 255, 255, 0.07);
+  --input-border: rgba(255, 255, 255, 0.13);
 }
 
-/* Tombol Dark Mode - Tetap di depan */
+/* ── Reset ─────────────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Body ───────────────────────────────────────────────────────────────────── */
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 80px 16px 56px;
+  transition: color var(--t);
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(139, 92, 246, 0.28) 0%, transparent 52%),
+    radial-gradient(ellipse at 85% 8%,  rgba(99, 102, 241, 0.22) 0%, transparent 48%),
+    radial-gradient(ellipse at 55% 85%, rgba(168, 85, 247, 0.18) 0%, transparent 50%),
+    #ede9f8;
+  background-attachment: fixed;
+}
+
+body.dark {
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(99, 102, 241, 0.22) 0%, transparent 52%),
+    radial-gradient(ellipse at 85% 8%,  rgba(139, 92, 246, 0.16) 0%, transparent 48%),
+    radial-gradient(ellipse at 55% 85%, rgba(168, 85, 247, 0.12) 0%, transparent 50%),
+    #080d1c;
+  background-attachment: fixed;
+}
+
+/* ── Theme Toggle ───────────────────────────────────────────────────────────── */
 #theme-toggle {
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    z-index: 1000;
-    padding: 10px 20px;
-    cursor: pointer;
-    border: none;
-    background: var(--accent);
-    color: white;
-    border-radius: 12px;
-    font-weight: 600;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 100;
+  padding: 8px 18px;
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  color: var(--text);
+  border: 1px solid var(--glass-border);
+  border-radius: 12px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: transform var(--t), box-shadow var(--t);
+}
+#theme-toggle:hover { transform: scale(1.05); box-shadow: 0 4px 20px var(--accent-glow); }
+
+/* ── Layout Container ───────────────────────────────────────────────────────── */
+.container {
+  width: 100%;
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-/* Container Glassmorphism */
-.container {
-    max-width: 450px;
-    width: 90%;
-    padding: 30px;
-    border-radius: 30px;
-    background: rgba(255, 255, 255, 0.1);
-    box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255,255,255,0.2);
-    text-align: center;
+/* ── Glass mixin (shared) ───────────────────────────────────────────────────── */
+.hero, .card {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  border-radius: var(--radius);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* ── Hero ───────────────────────────────────────────────────────────────────── */
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 28px 24px 22px;
 }
 
 #clock {
-    font-size: 3.5rem;
-    font-weight: 600;
-    margin-bottom: 5px;
-    background: linear-gradient(to right, var(--accent), #a855f7);
-    -webkit-background-clip: text;
-    background-clip: text; /* Tambahkan baris ini */
-    -webkit-text-fill-color: transparent;
+  font-size: 3.4rem;
+  font-weight: 700;
+  line-height: 1;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
-
-.timer-card, .todo-card, .links-card {
-    background: rgba(100, 116, 139, 0.1);
-    padding: 15px;
-    border-radius: 20px;
-    margin-top: 15px;
+.date-display {
+  font-size: 0.82rem;
+  color: var(--muted);
 }
+
+.greeting {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.name-row {
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  margin-top: 8px;
+}
+.name-row input { flex: 1; margin: 0; }
+
+/* ── Cards ──────────────────────────────────────────────────────────────────── */
+.card {
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.card-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+}
+
+.card-hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: -6px;
+}
+
+/* ── Timer ──────────────────────────────────────────────────────────────────── */
+.timer-display {
+  font-size: 3.4rem;
+  font-weight: 700;
+  text-align: center;
+  letter-spacing: 0.04em;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.timer-controls {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.timer-controls input { width: 72px; text-align: center; margin: 0; }
+
+/* ── Shared input row ───────────────────────────────────────────────────────── */
+.row-input {
+  display: flex;
+  gap: 8px;
+}
+.row-input input { flex: 1; margin: 0; }
+
+/* ── To-Do ──────────────────────────────────────────────────────────────────── */
 #todo-list {
-    column-count: 2;        /* Membagi jadi 2 kolom */
-    column-gap: 15px;       /* Jarak antar kolom */
-    margin-top: 15px;
-    padding: 0;
-    list-style: none;
-    text-align: left;       /* Paksa tulisan rata kiri */
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
 }
 
 #todo-list li {
-    background: rgba(255, 255, 255, 0.05);
-    padding: 10px;
-    margin-bottom: 10px;    /* Jarak antar tugas */
-    border-radius: 10px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 0.9rem;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    break-inside: avoid;    /* Mencegah item terpotong di tengah kolom */
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: flex-start;
+  gap: 7px;
+  font-size: 0.875rem;
+  word-break: break-word;
+  transition: background var(--t);
 }
 
-/* Biar tetap rapi di HP */
-@media (max-width: 600px) {
-    #todo-list {
-        column-count: 1;
-    }
+#todo-list li.done .task-text {
+  text-decoration: line-through;
+  color: var(--done-text);
 }
 
+#todo-list li input[type="checkbox"] {
+  width: 15px;
+  min-width: 15px;
+  height: 15px;
+  margin-top: 2px;
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex-shrink: 0;
+  padding: 0;
+  border: none;
+  background: none;
+}
+
+.task-text {
+  flex: 1;
+  cursor: pointer;
+  line-height: 1.4;
+}
+
+.edit-input {
+  flex: 1;
+  padding: 2px 6px;
+  font-size: 0.875rem;
+  border-radius: 6px;
+  border: 1px solid var(--accent);
+  background: var(--input-bg);
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  width: 100%;
+  margin: 0;
+}
+
+.task-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+
+/* ── Quick Links ────────────────────────────────────────────────────────────── */
+.links-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.link-chip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 9px 13px;
+  background: var(--input-bg);
+  border: 1px solid var(--input-border);
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: none;
+  word-break: break-word;
+  transition: background var(--t), transform var(--t);
+}
+.link-chip:hover { background: rgba(99, 102, 241, 0.12); transform: scale(1.02); }
+
+.link-chip-label { flex: 1; }
+
+.link-input-row { flex-wrap: wrap; }
+.link-input-row input { min-width: 80px; }
+
+/* ── Icon Buttons ───────────────────────────────────────────────────────────── */
+.icon-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 0.8rem;
+  cursor: pointer;
+  color: var(--muted);
+  line-height: 1;
+  box-shadow: none;
+  flex-shrink: 0;
+  transition: color var(--t);
+}
+.icon-btn:hover        { transform: none; box-shadow: none; }
+.icon-btn.edit:hover   { color: var(--accent); }
+.icon-btn.del:hover    { color: #ef4444; }
+.icon-btn.save:hover   { color: #22c55e; }
+
+/* ── Inputs ─────────────────────────────────────────────────────────────────── */
+input[type="text"],
+input[type="number"] {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid var(--input-border);
+  background: var(--input-bg);
+  color: var(--text);
+  font-family: inherit;
+  font-size: 0.9rem;
+  outline: none;
+  transition: border-color var(--t), background var(--t);
+}
+input::placeholder { color: var(--muted); }
+input:focus        { border-color: var(--accent); }
+
+/* ── Buttons ────────────────────────────────────────────────────────────────── */
 button {
-    background: var(--accent);
-    color: white;
-    border: none;
-    padding: 10px 15px;
-    border-radius: 12px;
-    cursor: pointer;
-    font-weight: 600;
-    transition: 0.3s;
+  padding: 10px 16px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: box-shadow var(--t), transform var(--t), opacity var(--t);
 }
+button:hover  { box-shadow: 0 4px 18px var(--accent-glow); transform: scale(1.04); }
+button:active { transform: scale(0.97); opacity: 0.88; }
 
-button:hover {
-    box-shadow: 0 0 15px var(--accent);
-    transform: scale(1.05);
-}
-
-input {
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: 1px solid #ddd;
-    margin-bottom: 10px;
-    background: rgba(255,255,255,0.05);
-}
-
-.link-item {
-    display: inline-block;
-    padding: 5px 12px;
-    background: rgba(99, 102, 241, 0.1);
-    color: var(--accent);
-    border-radius: 10px;
-    margin: 3px;
-    text-decoration: none;
-    font-size: 0.8rem;
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+@media (max-width: 480px) {
+  #todo-list          { grid-template-columns: 1fr; }
+  .links-grid         { grid-template-columns: 1fr; }
+  #clock              { font-size: 2.6rem; }
+  .timer-display      { font-size: 2.6rem; }
+  .link-input-row     { flex-direction: column; }
 }

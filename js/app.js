@@ -1,100 +1,225 @@
-// --- JAM, GREETING, & NAME ---
-function updateClock() {
-    const now = new Date();
-    document.getElementById('clock').innerText = now.toLocaleTimeString('id-ID');
+'use strict';
+
+const $ = (id) => document.getElementById(id);
+
+/* ── Theme ──────────────────────────────────────────────────────────────────── */
+const themeToggle = $('theme-toggle');
+
+function applyTheme(dark) {
+  document.body.classList.toggle('dark', dark);
+  themeToggle.textContent = dark ? '☀️ Light' : '🌙 Dark';
+  localStorage.setItem('theme', dark ? 'dark' : 'light');
 }
+
+themeToggle.addEventListener('click', () => applyTheme(!document.body.classList.contains('dark')));
+applyTheme(localStorage.getItem('theme') === 'dark');
+
+/* ── Clock / Date / Greeting ────────────────────────────────────────────────── */
+const clockEl    = $('clock');
+const dateEl     = $('date-display');
+const greetingEl = $('greeting');
+
+const TOD = (h) => h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+
+function updateClock() {
+  const now  = new Date();
+  clockEl.textContent = now.toLocaleTimeString('en-GB');
+  dateEl.textContent  = now.toLocaleDateString('en-US', {
+    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+  });
+  const name = localStorage.getItem('userName');
+  greetingEl.textContent = name
+    ? `${TOD(now.getHours())}, ${name}! 👋`
+    : `${TOD(now.getHours())}! What's your name?`;
+}
+
 setInterval(updateClock, 1000);
+updateClock();
 
-const nameInput = document.getElementById('name-input');
-const saveNameBtn = document.getElementById('save-name-btn');
-const greeting = document.getElementById('greeting');
+/* ── Name ───────────────────────────────────────────────────────────────────── */
+const nameInput = $('name-input');
 
-saveNameBtn.onclick = () => {
-    localStorage.setItem('userName', nameInput.value);
-    greeting.innerText = `Halo, ${nameInput.value}!`;
-};
-if(localStorage.getItem('userName')) greeting.innerText = `Halo, ${localStorage.getItem('userName')}!`;
+$('save-name-btn').addEventListener('click', () => {
+  const name = nameInput.value.trim();
+  if (!name) return;
+  localStorage.setItem('userName', name);
+  nameInput.value = '';
+  updateClock();
+});
+nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') $('save-name-btn').click(); });
 
-// --- DARK MODE ---
-const themeToggle = document.getElementById('theme-toggle');
-themeToggle.onclick = () => {
-    document.body.classList.toggle('dark');
-    themeToggle.innerText = document.body.classList.contains('dark') ? '☀️ Light' : '🌙 Dark';
-};
-
-// --- POMODORO TIMER (Dengan Custom Durasi) ---
-let timeLeft = 25 * 60, timerId = null;
-const display = document.getElementById('timer-display');
-const timerInput = document.getElementById('timer-input');
+/* ── Focus Timer ────────────────────────────────────────────────────────────── */
+const timerDisplay = $('timer-display');
+const timerInput   = $('timer-input');
+let totalSec = 25 * 60, timeLeft = totalSec, timerId = null;
 
 const renderTimer = () => {
-    const m = Math.floor(timeLeft / 60).toString().padStart(2, '0');
-    const s = (timeLeft % 60).toString().padStart(2, '0');
-    display.innerText = `${m}:${s}`;
+  timerDisplay.textContent =
+    `${String(Math.floor(timeLeft / 60)).padStart(2,'0')}:${String(timeLeft % 60).padStart(2,'0')}`;
 };
 
-document.getElementById('set-timer-btn').onclick = () => {
-    const newMinutes = parseInt(timerInput.value);
-    if (newMinutes > 0) {
-        timeLeft = newMinutes * 60;
-        renderTimer();
-    }
-};
+const stopTimer = () => { clearInterval(timerId); timerId = null; };
 
-document.getElementById('start-btn').onclick = () => {
-    if (!timerId) timerId = setInterval(() => { timeLeft--; renderTimer(); if(timeLeft <= 0) clearInterval(timerId); }, 1000);
-};
-document.getElementById('stop-btn').onclick = () => { clearInterval(timerId); timerId = null; };
-document.getElementById('reset-btn').onclick = () => { clearInterval(timerId); timerId = null; timeLeft = (parseInt(timerInput.value) || 25) * 60; renderTimer(); };
+$('set-timer-btn').addEventListener('click', () => {
+  const m = parseInt(timerInput.value, 10);
+  if (!m || m < 1) return;
+  stopTimer();
+  totalSec = m * 60;
+  timeLeft = totalSec;
+  renderTimer();
+});
 
-// --- TO-DO LIST (Anti-Duplikat) ---
-const input = document.getElementById('todo-input');
-const list = document.getElementById('todo-list');
-let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+$('start-btn').addEventListener('click', () => {
+  if (timerId || timeLeft <= 0) return;
+  timerId = setInterval(() => {
+    timeLeft--;
+    renderTimer();
+    if (timeLeft <= 0) { stopTimer(); timerDisplay.textContent = 'Done! 🎉'; }
+  }, 1000);
+});
 
-function saveAndRender() {
-    localStorage.setItem('tasks', JSON.stringify(tasks));
-    list.innerHTML = "";
-    tasks.forEach((t, i) => {
-        const li = document.createElement('li');
-        li.innerHTML = `${t} <button onclick="deleteTask(${i})">❌</button>`;
-        list.appendChild(li);
+$('stop-btn').addEventListener('click', stopTimer);
+
+$('reset-btn').addEventListener('click', () => { stopTimer(); timeLeft = totalSec; renderTimer(); });
+
+renderTimer();
+
+/* ── To-Do List ─────────────────────────────────────────────────────────────── */
+// Shape: { text: string, done: boolean }
+const todoInput = $('todo-input');
+const todoList  = $('todo-list');
+
+let tasks = JSON.parse(localStorage.getItem('tasks') || '[]')
+              .map(t => typeof t === 'string' ? { text: t, done: false } : t); // migrate legacy
+
+const saveTasks = () => localStorage.setItem('tasks', JSON.stringify(tasks));
+
+function renderTasks() {
+  todoList.innerHTML = '';
+  tasks.forEach((task, i) => {
+    const li = document.createElement('li');
+    if (task.done) li.classList.add('done');
+
+    // Checkbox
+    const cb = document.createElement('input');
+    cb.type = 'checkbox'; cb.checked = task.done;
+    cb.setAttribute('aria-label', `Toggle "${task.text}"`);
+    cb.addEventListener('change', () => { tasks[i].done = cb.checked; saveTasks(); renderTasks(); });
+
+    // Text
+    const span = document.createElement('span');
+    span.className = 'task-text';
+    span.textContent = task.text;
+    span.title = 'Double-click to edit';
+    span.addEventListener('dblclick', () => startEdit(i));
+
+    // Actions
+    const actions = document.createElement('div');
+    actions.className = 'task-actions';
+
+    const editBtn = makeIconBtn('✏️', 'icon-btn edit', `Edit "${task.text}"`, () => startEdit(i));
+    const delBtn  = makeIconBtn('✕',  'icon-btn del',  `Delete "${task.text}"`, () => {
+      tasks.splice(i, 1); saveTasks(); renderTasks();
     });
+
+    actions.append(editBtn, delBtn);
+    li.append(cb, span, actions);
+    todoList.appendChild(li);
+  });
 }
 
-document.getElementById('add-btn').onclick = () => {
-    const newTask = input.value.trim();
-    if (newTask && !tasks.includes(newTask)) {
-        tasks.push(newTask);
-        input.value = "";
-        saveAndRender();
-    } else if (tasks.includes(newTask)) alert("Tugas sudah ada!");
-};
+function startEdit(i) {
+  const li      = todoList.children[i];
+  const span    = li.querySelector('.task-text');
+  const actions = li.querySelector('.task-actions');
 
-window.deleteTask = (i) => { tasks.splice(i, 1); saveAndRender(); };
+  const input = document.createElement('input');
+  input.type = 'text'; input.className = 'edit-input'; input.value = tasks[i].text;
 
-// --- QUICK LINKS ---
-const lName = document.getElementById('link-name'), lUrl = document.getElementById('link-url');
-let links = JSON.parse(localStorage.getItem('quickLinks')) || [];
+  const commit = () => {
+    const val = input.value.trim();
+    if (val) tasks[i].text = val;
+    saveTasks(); renderTasks();
+  };
+
+  const saveBtn = makeIconBtn('✔', 'icon-btn save', 'Save', commit);
+
+  input.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter')  commit();
+    if (e.key === 'Escape') renderTasks();
+  });
+
+  span.replaceWith(input);
+  actions.innerHTML = '';
+  actions.appendChild(saveBtn);
+  input.focus(); input.select();
+}
+
+function addTask() {
+  const val = todoInput.value.trim();
+  if (!val || tasks.some(t => t.text === val)) { todoInput.select(); return; }
+  tasks.push({ text: val, done: false });
+  todoInput.value = '';
+  saveTasks(); renderTasks();
+}
+
+$('add-btn').addEventListener('click', addTask);
+todoInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addTask(); });
+renderTasks();
+
+/* ── Quick Links ────────────────────────────────────────────────────────────── */
+// Shape: { name: string, url: string }
+const linkNameInput  = $('link-name');
+const linkUrlInput   = $('link-url');
+const linksGrid      = $('links-grid');
+
+let links = JSON.parse(localStorage.getItem('quickLinks') || '[]');
+
+const saveLinks = () => localStorage.setItem('quickLinks', JSON.stringify(links));
 
 function renderLinks() {
-    localStorage.setItem('quickLinks', JSON.stringify(links));
-    const container = document.getElementById('links-container');
-    container.innerHTML = "";
-    links.forEach((link, i) => {
-        container.innerHTML += `<a href="${link.url}" target="_blank" class="link-item">${link.name}</a>
-                                <button onclick="deleteLink(${i})" style="padding:0; background:none;">❌</button>`;
+  linksGrid.innerHTML = '';
+  links.forEach((link, i) => {
+    const chip = document.createElement('a');
+    chip.className = 'link-chip';
+    chip.href      = link.url;
+    chip.target    = '_blank';
+    chip.rel       = 'noopener noreferrer';
+
+    const label = document.createElement('span');
+    label.className   = 'link-chip-label';
+    label.textContent = link.name;
+
+    const delBtn = makeIconBtn('✕', 'icon-btn del', `Remove ${link.name}`, (e) => {
+      e.preventDefault();
+      links.splice(i, 1); saveLinks(); renderLinks();
     });
+
+    chip.append(label, delBtn);
+    linksGrid.appendChild(chip);
+  });
 }
 
-document.getElementById('add-link-btn').onclick = () => {
-    if (lName.value && lUrl.value) {
-        links.push({ name: lName.value, url: lUrl.value.startsWith('http') ? lUrl.value : 'https://'+lUrl.value });
-        lName.value = ""; lUrl.value = ""; renderLinks();
-    }
-};
+function addLink() {
+  const name = linkNameInput.value.trim();
+  let   url  = linkUrlInput.value.trim();
+  if (!name || !url) return;
+  if (!/^https?:\/\//i.test(url)) url = 'https://' + url;
+  links.push({ name, url });
+  linkNameInput.value = ''; linkUrlInput.value = '';
+  saveLinks(); renderLinks();
+}
 
-window.deleteLink = (i) => { links.splice(i, 1); renderLinks(); };
+$('add-link-btn').addEventListener('click', addLink);
+linkUrlInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') addLink(); });
+renderLinks();
 
-// --- INIT ---
-updateClock(); renderTimer(); saveAndRender(); renderLinks();
+/* ── Utility ────────────────────────────────────────────────────────────────── */
+function makeIconBtn(text, className, label, handler) {
+  const btn = document.createElement('button');
+  btn.textContent = text;
+  btn.className   = className;
+  btn.setAttribute('aria-label', label);
+  btn.addEventListener('click', handler);
+  return btn;
+}
